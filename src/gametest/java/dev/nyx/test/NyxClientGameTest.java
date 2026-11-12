@@ -41,7 +41,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.pig.Pig;
+import net.minecraft.world.entity.monster.zombie.Husk;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.projectile.FishingHook;
@@ -204,11 +205,11 @@ public final class NyxClientGameTest implements FabricClientGameTest {
         ctx.runOnClient(mc -> bool(ModuleManager.get(ESP.class), "Passives").set(true));
         enable(ctx, ESP.class);
         ctx.waitTicks(5);
-        check("ESP outlines a nearby pig", ctx.computeOnClient(mc -> find(mc, EntityType.PIG) != null && find(mc, EntityType.PIG).isCurrentlyGlowing()), null);
+        check("ESP outlines a nearby pig", ctx.computeOnClient(mc -> find(mc, Pig.class) != null && find(mc, Pig.class).isCurrentlyGlowing()), null);
         ctx.takeScreenshot("06-esp-hud");
         disable(ctx, ESP.class);
         ctx.waitTicks(3);
-        check("ESP clears the outline when disabled", ctx.computeOnClient(mc -> find(mc, EntityType.PIG) != null && !find(mc, EntityType.PIG).isCurrentlyGlowing()), null);
+        check("ESP clears the outline when disabled", ctx.computeOnClient(mc -> find(mc, Pig.class) != null && !find(mc, Pig.class).isCurrentlyGlowing()), null);
         clearArena(server);
 
         enable(ctx, Zoom.class);
@@ -279,7 +280,7 @@ public final class NyxClientGameTest implements FabricClientGameTest {
         ctx.waitTicks(10);
         enable(ctx, KillAura.class);
         ctx.waitTicks(50);
-        float auraHp = ctx.computeOnClient(mc -> health(mc, EntityType.HUSK));
+        float auraHp = ctx.computeOnClient(mc -> health(mc, Husk.class));
         check("KillAura attacks a nearby husk", auraHp < 20f, "husk health " + auraHp);
         disable(ctx, KillAura.class);
         clearArena(server);
@@ -288,13 +289,13 @@ public final class NyxClientGameTest implements FabricClientGameTest {
         server.runCommand(String.format("summon husk %d %d %d {NoAI:1b}", x, y, z + 2));
         ctx.waitTicks(10);
         ctx.runOnClient(mc -> {
-            Entity husk = find(mc, EntityType.HUSK);
+            Entity husk = find(mc, Husk.class);
             if (husk != null) Targets.face(mc.player, husk);
         });
         ctx.waitTicks(2);
         enable(ctx, TriggerBot.class);
         ctx.waitTicks(50);
-        float trigHp = ctx.computeOnClient(mc -> health(mc, EntityType.HUSK));
+        float trigHp = ctx.computeOnClient(mc -> health(mc, Husk.class));
         check("TriggerBot hits the husk under the crosshair", trigHp < 20f, "husk health " + trigHp);
         disable(ctx, TriggerBot.class);
         clearArena(server);
@@ -512,15 +513,15 @@ public final class NyxClientGameTest implements FabricClientGameTest {
         return ctx.computeOnClient(mc -> mc.player.getAttribute(Attributes.STEP_HEIGHT).getBaseValue());
     }
 
-    private static Entity find(Minecraft mc, EntityType<?> type) {
+    private static Entity find(Minecraft mc, Class<? extends Entity> type) {
         Entity best = null;
         for (Entity e : mc.level.entitiesForRendering()) {
-            if (e.getType() == type && (best == null || e.distanceToSqr(mc.player) < best.distanceToSqr(mc.player))) best = e;
+            if (type.isInstance(e) && (best == null || e.distanceToSqr(mc.player) < best.distanceToSqr(mc.player))) best = e;
         }
         return best;
     }
 
-    private static float health(Minecraft mc, EntityType<?> type) {
+    private static float health(Minecraft mc, Class<? extends Entity> type) {
         Entity e = find(mc, type);
         return e instanceof LivingEntity le ? (le.isAlive() ? le.getHealth() : 0f) : 0f;
     }
