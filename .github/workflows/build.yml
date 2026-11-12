@@ -20,6 +20,9 @@ jobs:
       - name: Build
         id: build
         run: gradle build --no-daemon --stacktrace > build.log 2>&1; echo "code=$?" >> "$GITHUB_OUTPUT"
+      - name: Verify reflected field names
+        id: reflect
+        run: bash tools/verify-reflection.sh > reflection.log 2>&1; echo "code=$?" >> "$GITHUB_OUTPUT"; cat reflection.log
       - name: Dump 26.3 API
         if: hashFiles('tools/dump-api.sh') != ''
         run: bash tools/dump-api.sh || true
@@ -27,6 +30,7 @@ jobs:
         if: always()
         run: |
           mkdir -p /tmp/out && cp build.log /tmp/out/ || true
+          cp reflection.log /tmp/out/ 2>/dev/null || true
           cp -r build/api-dump /tmp/out/ 2>/dev/null || true
           cp build/libs/*.jar /tmp/out/ 2>/dev/null; rm -f /tmp/out/*-sources.jar
           echo "${{ steps.build.outputs.code }}" > /tmp/out/exit-code.txt
@@ -41,4 +45,4 @@ jobs:
             build/libs/*.jar
             !build/libs/*-sources.jar
       - name: Fail if build failed
-        run: test "${{ steps.build.outputs.code }}" = "0"
+        run: test "${{ steps.build.outputs.code }}" = "0" && test "${{ steps.reflect.outputs.code }}" = "0"
