@@ -111,8 +111,12 @@ public final class ModuleManager {
         }
     }
 
+    /** Number of module errors this session (read by the in-game tests). */
+    public static int failures;
+
     /** A module that throws is switched off instead of crashing the game. */
     private static void fail(Module m, Throwable t) {
+        failures++;
         NyxClient.LOG.error("Module {} crashed and was disabled", m.getName(), t);
         m.setEnabledSilently(false);
         Toasts.push(m.getName(), "Disabled after an error", false);

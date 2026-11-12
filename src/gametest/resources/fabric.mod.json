@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "nyx-gametest",
+  "version": "1.0.0",
+  "name": "Nyx Client in-game tests",
+  "environment": "client",
+  "entrypoints": {
+    "fabric-client-gametest": ["dev.nyx.test.NyxClientGameTest"]
+  },
+  "depends": {
+    "nyx": "*",
+    "fabric-api": "*"
+  }
+}

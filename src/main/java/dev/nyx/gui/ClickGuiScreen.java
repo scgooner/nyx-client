@@ -177,8 +177,18 @@ public final class ClickGuiScreen extends Screen {
 
     // ------------------------------------------------------------------ frame
 
+    /** CPU time spent building the GUI each frame (read by the in-game performance test). */
+    public static long perfNanos, perfFrames;
+
     @Override
     public void extractRenderState(GuiGraphicsExtractor g, int mx, int my, float pt) {
+        long start = System.nanoTime();
+        frame(g, mx, my);
+        perfNanos += System.nanoTime() - start;
+        perfFrames++;
+    }
+
+    private void frame(GuiGraphicsExtractor g, int mx, int my) {
         long now = System.nanoTime();
         dt = lastFrame == 0 ? 0.016f : Math.min(0.1f, (now - lastFrame) / 1e9f);
         lastFrame = now;

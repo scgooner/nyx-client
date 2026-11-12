@@ -30,6 +30,20 @@ jobs:
           bash tools/verify-reflection.sh > reflection.log 2>&1
           echo "code=$?" >> "$GITHUB_OUTPUT"
           cat reflection.log
+      - name: Install virtual display
+        if: steps.build.outputs.code == '0'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq xvfb mesa-utils mesa-vulkan-drivers libgl1-mesa-dri libegl1 > /dev/null
+      - name: Run in-game tests (real 26.3 client)
+        id: gametest
+        if: steps.build.outputs.code == '0'
+        timeout-minutes: 30
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: |
+          set +e
+          xvfb-run -a -s "-screen 0 1920x1080x24" timeout 1500 gradle runClientGameTest --no-daemon --stacktrace > gametest.log 2>&1
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+          tail -40 gametest.log
       - name: Dump 26.3 API
         if: hashFiles('tools/dump-api.sh') != ''
         run: bash tools/dump-api.sh || true
@@ -39,6 +53,13 @@ jobs:
           set +e
           mkdir -p /tmp/out && cp build.log /tmp/out/ || true
           cp reflection.log /tmp/out/ 2>/dev/null || true
+          mkdir -p /tmp/out/gametest
+          cp gametest.log /tmp/out/gametest/ 2>/dev/null
+          find build -name 'nyx-test-report.txt' -exec cp {} /tmp/out/gametest/ \;
+          find build -path '*run*' -name 'latest.log' -exec cp {} /tmp/out/gametest/ \;
+          find build -path '*screenshots*' -name '*.png' -exec cp {} /tmp/out/gametest/ \;
+          find build -path '*crash-reports*' -name '*.txt' -exec cp {} /tmp/out/gametest/ \;
+          echo "${{ steps.gametest.outputs.code }}" > /tmp/out/gametest/exit-code.txt
           cp -r build/api-dump /tmp/out/ 2>/dev/null || true
           cp build/libs/*.jar /tmp/out/ 2>/dev/null; rm -f /tmp/out/*-sources.jar
           echo "${{ steps.build.outputs.code }}" > /tmp/out/exit-code.txt
@@ -54,4 +75,4 @@ jobs:
             build/libs/*.jar
             !build/libs/*-sources.jar
       - name: Fail if build failed
-        run: test "${{ steps.build.outputs.code }}" = "0" && test "${{ steps.reflect.outputs.code }}" = "0"
+        run: test "${{ steps.build.outputs.code }}" = "0" && test "${{ steps.reflect.outputs.code }}" = "0" && test "${{ steps.gametest.outputs.code }}" = "0"
