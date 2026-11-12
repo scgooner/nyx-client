@@ -19,16 +19,24 @@ jobs:
           gradle-version: current
       - name: Build
         id: build
-        run: gradle build --no-daemon --stacktrace > build.log 2>&1; echo "code=$?" >> "$GITHUB_OUTPUT"
+        run: |
+          set +e
+          gradle build --no-daemon --stacktrace > build.log 2>&1
+          echo "code=$?" >> "$GITHUB_OUTPUT"
       - name: Verify reflected field names
         id: reflect
-        run: bash tools/verify-reflection.sh > reflection.log 2>&1; echo "code=$?" >> "$GITHUB_OUTPUT"; cat reflection.log
+        run: |
+          set +e
+          bash tools/verify-reflection.sh > reflection.log 2>&1
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+          cat reflection.log
       - name: Dump 26.3 API
         if: hashFiles('tools/dump-api.sh') != ''
         run: bash tools/dump-api.sh || true
       - name: Publish results to the "out" branch
         if: always()
         run: |
+          set +e
           mkdir -p /tmp/out && cp build.log /tmp/out/ || true
           cp reflection.log /tmp/out/ 2>/dev/null || true
           cp -r build/api-dump /tmp/out/ 2>/dev/null || true
@@ -39,6 +47,7 @@ jobs:
           git -c user.name=ci -c user.email=ci@localhost commit -qm "build ${{ github.sha }}"
           git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" out
       - uses: actions/upload-artifact@v4
+        if: steps.build.outputs.code == '0'
         with:
           name: nyx-client-26.3-jar
           path: |
