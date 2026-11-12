@@ -154,10 +154,11 @@ public final class NyxClientGameTest implements FabricClientGameTest {
         click(ctx, l, l.cardX(0), l.cardY(0), InputConstants.MOUSE_BUTTON_LEFT);
         check("Search \"fly\" lists Flight first and it can be toggled", flight.isEnabled(), null);
         ctx.runOnClient(mc -> flight.setEnabled(false));
-        ctx.getInput().holdKeyFor(InputConstants.KEY_ESCAPE, 2); // unfocus search
-        ctx.waitTicks(3);
-        ctx.getInput().holdKeyFor(InputConstants.KEY_ESCAPE, 2); // clear search
+        // Clicking the card took focus from the search box, so one Esc clears the search
+        // and must leave the menu open (a held key's repeats must not also close it).
+        ctx.getInput().holdKeyFor(InputConstants.KEY_ESCAPE, 4);
         ctx.waitTicks(5);
+        check("Esc clears the search without closing the menu", ctx.computeOnClient(mc -> Mc.screen() instanceof ClickGuiScreen), null);
 
         // Category switch.
         l = layout(ctx);
