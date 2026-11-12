@@ -105,6 +105,9 @@ public final class ClickGuiScreen extends Screen {
 
     public ClickGuiScreen() {
         super(Component.literal("Nyx Client"));
+        // The key that opened the menu is usually still held: its repeats must not close it again.
+        int openKey = gui().getKey();
+        if (Keys.down(openKey)) heldKeys.add(openKey);
     }
 
     private static ClickGui gui() { return ModuleManager.get(ClickGui.class); }
@@ -212,6 +215,10 @@ public final class ClickGuiScreen extends Screen {
         float W = Math.min(MAX_W, width - 16), H = Math.min(MAX_H, height - 16);
         float x0 = Render2D.snap((width - W) / 2f), y0 = Render2D.snap((height - H) / 2f);
         float cx = x0 + W / 2f, cy = y0 + H / 2f;
+        geoX0 = x0;
+        geoY0 = y0;
+        geoW = W;
+        geoH = H;
 
         pending.clear();
         pendingScroll.clear();
@@ -272,12 +279,18 @@ public final class ClickGuiScreen extends Screen {
         Render2D.text(g, "nyx", sx + 16, y0 + 14, Colors.TEXT);
         Render2D.text(g, "client", sx + 18 + Render2D.width("nyx"), y0 + 14, Colors.MUTED);
 
-        float rowsY = y0 + 44;
+        // Rows tighten up on short windows (high GUI scale) so everything still fits.
+        boolean compact = H < 260;
+        float rowH = compact ? 17 : 19, rowGap = compact ? 1 : 2;
+        float rowsY = y0 + (compact ? 38 : 44);
         Render2D.text(g, "MODULES", sx, rowsY - 1, Colors.alpha(Colors.MUTED, 0.8f));
-        rowsY += 12;
-        float rowH = 19, rowGap = 2;
+        rowsY += compact ? 10 : 12;
         Category[] cats = Category.values();
-        float configsY = rowsY + cats.length * (rowH + rowGap) + 18;
+        float configsY = rowsY + cats.length * (rowH + rowGap) + (compact ? 14 : 18);
+        geoRowsY = rowsY;
+        geoRowStep = rowH + rowGap;
+        geoRowH = rowH;
+        geoConfigsY = configsY;
 
         // Selection pill (animated between rows)
         Float target = null;
@@ -310,7 +323,7 @@ public final class ClickGuiScreen extends Screen {
             });
         }
 
-        Render2D.text(g, "CLIENT", sx, configsY - 13, Colors.alpha(Colors.MUTED, 0.8f));
+        Render2D.text(g, "CLIENT", sx, configsY - (compact ? 11 : 13), Colors.alpha(Colors.MUTED, 0.8f));
         sidebarRow(g, x0, sx, configsY, rowH, "☰", "Configs", 0, configsPage && !searching(), accent, sp, "configs", (b, mx, my) -> {
             if (b != LEFT) return;
             if (!configsPage || searching()) switchT = 0f;
@@ -321,10 +334,37 @@ public final class ClickGuiScreen extends Screen {
             scroll = scrollTarget = 0;
         });
 
-        float hintY = y0 + H - 38;
-        Render2D.text(g, "Right-click  settings", sx, hintY, Colors.alpha(Colors.MUTED, 0.75f));
-        Render2D.text(g, "Middle-click  keybind", sx, hintY + 10, Colors.alpha(Colors.MUTED, 0.75f));
-        Render2D.text(g, "v" + NyxClient.VERSION + "  ·  26.3", sx, y0 + H - 14, Colors.alpha(Colors.MUTED, 0.55f));
+        // Footer only where there's room below the last row.
+        float free = (y0 + H) - (configsY + rowH);
+        if (free >= 46) {
+            float hintY = y0 + H - 38;
+            Render2D.text(g, "Right-click  settings", sx, hintY, Colors.alpha(Colors.MUTED, 0.75f));
+            Render2D.text(g, "Middle-click  keybind", sx, hintY + 10, Colors.alpha(Colors.MUTED, 0.75f));
+        }
+        if (free >= 20) {
+            Render2D.text(g, "v" + NyxClient.VERSION + "  ·  26.3", sx, y0 + H - 14, Colors.alpha(Colors.MUTED, 0.55f));
+        }
+    }
+
+    // ------------------------------------------------------------------ live layout (used by the in-game tests)
+
+    private float geoX0, geoY0, geoW, geoH, geoRowsY, geoRowStep, geoRowH, geoConfigsY;
+    private float geoContentX, geoBodyY, geoCardW, geoCardH = 38, geoCardGap = 7, geoSettingsTop;
+    private int geoCols = 2;
+
+    /** Where things were drawn last frame, in GUI coordinates. */
+    public record Geometry(float x0, float y0, float w, float h, float contentX, float bodyY, int cols, float cardW,
+                           float cardH, float cardGap, float rowsY, float rowStep, float rowH, float configsY,
+                           float panelX, float settingsTop) {
+        public float cardCenterX(int i) { return contentX + (i % cols) * (cardW + cardGap) + cardW / 2f - 20; }
+        public float cardCenterY(int i) { return bodyY + 2 + (i / cols) * (cardH + cardGap) + cardH / 2f; }
+        public float categoryCenterY(int i) { return rowsY + i * rowStep + rowH / 2f; }
+        public float configsCenterY() { return configsY + rowH / 2f; }
+    }
+
+    public Geometry geometry() {
+        return new Geometry(geoX0, geoY0, geoW, geoH, geoContentX, geoBodyY, geoCols, geoCardW, geoCardH, geoCardGap,
+                geoRowsY, geoRowStep, geoRowH, geoConfigsY, geoX0 + SIDEBAR + 1, geoSettingsTop);
     }
 
     private void sidebarRow(GuiGraphicsExtractor g, float x0, float sx, float y, float h, String icon, String title, int badge,
@@ -388,8 +428,15 @@ public final class ClickGuiScreen extends Screen {
 
     private void drawModules(GuiGraphicsExtractor g, float x, float y, float w, float h, int accent, float sp) {
         List<Module> mods = searching() ? ModuleManager.search(search.text) : ModuleManager.of(category);
-        float gap = 7, cardW = (w - gap) / 2f, cardH = 38;
-        int rows = (mods.size() + 1) / 2;
+        float gap = 7, cardH = 38;
+        // Two columns when each card still has room for its description, otherwise one.
+        int cols = (w - gap) / 2f >= 150 ? 2 : 1;
+        float cardW = cols == 2 ? (w - gap) / 2f : w;
+        int rows = (mods.size() + cols - 1) / cols;
+        geoContentX = x;
+        geoBodyY = y;
+        geoCols = cols;
+        geoCardW = cardW;
         maxScroll = Math.max(0, rows * (cardH + gap) - gap - h + 4);
         scrollTarget = Math.max(0, Math.min(maxScroll, scrollTarget));
         scroll = Anim.approach(scroll, scrollTarget, 18f, dt);
@@ -401,8 +448,8 @@ public final class ClickGuiScreen extends Screen {
             Render2D.textCentered(g, "Try a name like “fly” or a category", x + w / 2, y + h / 2 + 2, Colors.alpha(Colors.MUTED, 0.6f));
         }
         for (int i = 0; i < mods.size(); i++) {
-            float cxp = x + (i % 2) * (cardW + gap);
-            float cyp = y + 2 + (i / 2) * (cardH + gap) - scroll;
+            float cxp = x + (i % cols) * (cardW + gap);
+            float cyp = y + 2 + (i / cols) * (cardH + gap) - scroll;
             if (cyp + cardH < y - 2 || cyp > y + h + 2) continue;
             drawCard(g, mods.get(i), cxp, cyp, cardW, cardH, accent, sp);
         }
@@ -512,6 +559,7 @@ public final class ClickGuiScreen extends Screen {
 
         // Body
         float x = px + 14, w = pw - 30, top = y0 + HEADER + 8, h = H - HEADER - 16;
+        geoSettingsTop = top;
         pendingScroll.add(new ScrollArea(px, top, pw, h, true));
         setClip(g, px, top, pw, h);
         float y = top - sScroll;
@@ -887,10 +935,23 @@ public final class ClickGuiScreen extends Screen {
         return true;
     }
 
+    /** Keys currently held, so OS key-repeat events don't trigger close/back/bind more than once. */
+    private final java.util.Set<Integer> heldKeys = new java.util.HashSet<>();
+
+    @Override
+    public boolean keyReleased(KeyEvent event) {
+        heldKeys.remove(event.key());
+        return true;
+    }
+
     @Override
     public boolean keyPressed(KeyEvent event) {
         int key = event.key();
+        boolean repeat = !heldKeys.add(key);
         if (closingAt >= 0) return true;
+
+        // Text editing (e.g. holding Backspace) is the only thing that should act on repeats.
+        if (repeat && !(focusedField != null && key == InputConstants.KEY_BACKSPACE)) return true;
 
         if (listening != null) {
             int value = (key == InputConstants.KEY_ESCAPE || key == InputConstants.KEY_BACKSPACE || key == InputConstants.KEY_DELETE) ? Keys.NONE : key;

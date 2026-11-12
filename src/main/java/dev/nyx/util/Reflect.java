@@ -37,6 +37,26 @@ public final class Reflect {
         try { f.setInt(target, value); } catch (Throwable ignored) {}
     }
 
+    public static java.lang.reflect.Method method(Class<?> owner, String name, Class<?>... params) {
+        for (Class<?> c = owner; c != null; c = c.getSuperclass()) {
+            try {
+                java.lang.reflect.Method m = c.getDeclaredMethod(name, params);
+                m.setAccessible(true);
+                return m;
+            } catch (NoSuchMethodException ignored) {
+            } catch (Throwable t) {
+                break;
+            }
+        }
+        NyxClient.LOG.warn("Method {}.{} not found", owner.getSimpleName(), name);
+        return null;
+    }
+
+    public static int getStaticInt(Field f, int fallback) {
+        if (f == null) return fallback;
+        try { return f.getInt(null); } catch (Throwable t) { return fallback; }
+    }
+
     public static boolean getBool(Field f, Object target, boolean fallback) {
         if (f == null || target == null) return fallback;
         try { return f.getBoolean(target); } catch (Throwable t) { return fallback; }

@@ -130,6 +130,7 @@ public final class NyxClientGameTest implements FabricClientGameTest {
         ctx.waitTicks(10);
         ctx.takeScreenshot("02-settings-panel");
         NumberSetting range = num(aura, "Range");
+        l = layout(ctx); // settings panel geometry is known once it has been drawn
         float rowY = l.settingsTop() + 18 + 24; // description line, then keybind row
         click(ctx, l, l.panelX() + 14 + 0.5f, rowY + 21.5f, InputConstants.MOUSE_BUTTON_LEFT);
         check("Clicking the start of a slider sets its minimum", range.value() <= 1.11, "Range = " + range.format());
@@ -159,7 +160,8 @@ public final class NyxClientGameTest implements FabricClientGameTest {
         ctx.waitTicks(5);
 
         // Category switch.
-        click(ctx, l, l.x0 + 40, l.categoryY(1), InputConstants.MOUSE_BUTTON_LEFT);
+        l = layout(ctx);
+        click(ctx, l, l.x0() + 40, l.categoryY(1), InputConstants.MOUSE_BUTTON_LEFT);
         ctx.waitTicks(10);
         Sprint sprint = ModuleManager.get(Sprint.class);
         click(ctx, l, l.cardX(0), l.cardY(0), InputConstants.MOUSE_BUTTON_LEFT);
@@ -168,7 +170,8 @@ public final class NyxClientGameTest implements FabricClientGameTest {
         ctx.takeScreenshot("04-movement");
 
         // Configs page: create a profile from the GUI.
-        click(ctx, l, l.x0 + 40, l.configsY(), InputConstants.MOUSE_BUTTON_LEFT);
+        l = layout(ctx);
+        click(ctx, l, l.x0() + 40, l.configsY(), InputConstants.MOUSE_BUTTON_LEFT);
         ctx.waitTicks(10);
         click(ctx, l, l.contentX() + 40, l.bodyY() + 2 + 48 + 10, InputConstants.MOUSE_BUTTON_LEFT);
         ctx.getInput().typeChars("pvp");
@@ -359,8 +362,9 @@ public final class NyxClientGameTest implements FabricClientGameTest {
 
         server.runCommand("gamemode creative @a");
         teleportHome(ctx, server);
-        final int fx = x, fy = y, fz = z;
-        server.runCommand(String.format("fill %d %d %d %d %d %d stone", x + 1, y, z + 1, x + 3, y + 1, z + 3));
+        BlockPos np = ctx.computeOnClient(mc -> mc.player.blockPosition());
+        final int fx = np.getX(), fy = np.getY(), fz = np.getZ();
+        server.runCommand(String.format("fill %d %d %d %d %d %d stone", fx + 1, fy, fz + 1, fx + 3, fy + 1, fz + 3));
         ctx.waitTicks(5);
         int before = server.computeOnServer(s -> countStone(s.overworld(), fx, fy, fz));
         enable(ctx, Nuker.class);
@@ -437,28 +441,24 @@ public final class NyxClientGameTest implements FabricClientGameTest {
 
     // ------------------------------------------------------------------ helpers
 
-    private record Layout(double scale, float x0, float y0, float w, float h) {
-        static final float SIDEBAR = 112, HEADER = 36;
-        float contentX() { return x0 + SIDEBAR + 14; }
-        float contentW() { return w - SIDEBAR - 28; }
-        float bodyY() { return y0 + HEADER + 10; }
-        float cardW() { return (contentW() - 7) / 2f; }
-        float cardX(int i) { return contentX() + (i % 2) * (cardW() + 7) + cardW() / 2f - 20; }
-        float cardY(int i) { return bodyY() + 2 + (i / 2) * 45 + 19; }
-        float categoryY(int i) { return y0 + 56 + i * 21 + 9.5f; }
-        float configsY() { return y0 + 56 + 6 * 21 + 18 + 9.5f; }
-        float panelX() { return x0 + SIDEBAR + 1; }
-        float settingsTop() { return y0 + HEADER + 8; }
+    /** The GUI's own last-frame layout, so clicks land exactly where things were drawn. */
+    private record Layout(double scale, ClickGuiScreen.Geometry g) {
+        float x0() { return g.x0(); }
+        float contentX() { return g.contentX(); }
+        float bodyY() { return g.bodyY(); }
+        float cardX(int i) { return g.cardCenterX(i); }
+        float cardY(int i) { return g.cardCenterY(i); }
+        float categoryY(int i) { return g.categoryCenterY(i); }
+        float configsY() { return g.configsCenterY(); }
+        float panelX() { return g.panelX(); }
+        float settingsTop() { return g.settingsTop(); }
     }
 
     private Layout layout(ClientGameTestContext ctx) {
         return ctx.computeOnClient(mc -> {
             Screen s = Mc.screen();
-            double scale = mc.getWindow().getGuiScale();
-            float w = Math.min(452, s.width - 16), h = Math.min(292, s.height - 16);
-            float x0 = (float) (Math.round((s.width - w) / 2f * scale) / scale);
-            float y0 = (float) (Math.round((s.height - h) / 2f * scale) / scale);
-            return new Layout(scale, x0, y0, w, h);
+            if (!(s instanceof ClickGuiScreen gui)) throw new AssertionError("Click GUI is not open (screen: " + s + ")");
+            return new Layout(mc.getWindow().getGuiScale(), gui.geometry());
         });
     }
 

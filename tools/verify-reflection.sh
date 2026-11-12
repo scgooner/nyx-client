@@ -14,4 +14,16 @@ check() {
 check net.minecraft.client.Minecraft rightClickDelay
 check net.minecraft.client.multiplayer.MultiPlayerGameMode destroyDelay
 check net.minecraft.world.entity.projectile.FishingHook biting
+check net.minecraft.world.entity.Entity FLAG_GLOWING
+if javap -p -cp "$MC" net.minecraft.world.entity.Entity | grep -qE 'void setSharedFlag\(int, boolean\)'; then
+  echo "ok   net.minecraft.world.entity.Entity.setSharedFlag(int, boolean)"
+else
+  echo "MISSING net.minecraft.world.entity.Entity.setSharedFlag(int, boolean)"; fail=1
+fi
+# Nine-slice sprites rely on the "stretch_inner" key; without it the inner part tiles (slow).
+if javap -c -p -cp "$MC" 'net.minecraft.client.resources.metadata.gui.GuiSpriteScaling$NineSlice' | grep -q 'stretch_inner'; then
+  echo "ok   GuiSpriteScaling.NineSlice supports stretch_inner"
+else
+  echo "MISSING GuiSpriteScaling.NineSlice stretch_inner key"; fail=1
+fi
 exit $fail
