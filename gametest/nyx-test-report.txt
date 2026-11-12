@@ -1,0 +1,50 @@
+Nyx Client in-game test: 39 passed, 2 failed
+
+## Click GUI
+PASS  Right Shift opens the GUI
+PASS  GUI renders frames  (60 frames in 3 s)
+PASS  GUI costs under 2 ms of CPU per frame  (0.434 ms/frame)
+PASS  Left-click on a module card enables it
+PASS  Left-click again disables it
+PASS  Clicking the start of a slider sets its minimum  (Range = 1.0)
+PASS  Middle-click + key press binds a module  (key = 10)
+PASS  Search "fly" lists Flight first and it can be toggled
+PASS  Esc clears the search without closing the menu
+PASS  Movement category shows Sprint first
+PASS  Configs page creates and activates a new profile  (active = pvp)
+PASS  Right Shift closes the GUI
+PASS  Closing does not reopen the GUI
+
+## Modules
+PASS  Fullbright gives night vision
+PASS  Fullbright removes it again when disabled
+PASS  ESP outlines a nearby pig
+PASS  ESP clears the outline when disabled
+PASS  Zoom narrows the FOV while C is held  (FOV 70 -> 30)
+PASS  Zoom restores the FOV on release  (FOV back to 70)
+PASS  Step raises step height  (step = 1.0)
+PASS  Step restores vanilla step height  (step = 0.6)
+PASS  Flight makes you fly in survival
+PASS  Flight turns survival flying off again
+PASS  Sprint sprints while walking forward
+PASS  Speed moves faster than sprinting  (0.402 blocks/tick)
+PASS  Spider climbs a wall  (climbed 3.60 blocks)
+PASS  KillAura attacks a nearby husk  (husk health 15.299998)
+PASS  TriggerBot hits the husk under the crosshair  (husk health 15.299998)
+PASS  AutoTotem moves a totem to the offhand
+PASS  AutoTool switches to the pickaxe while mining  (slot 0)
+PASS  AutoTool switches back afterwards  (slot 4)
+PASS  FastPlace removes the place delay
+PASS  AutoRespawn respawns after death
+PASS  FastBreak removes the break delay
+FAIL  Nuker breaks nearby blocks  (0 -> 0 stone)
+FAIL  AutoFish casts the rod
+PASS  AntiAFK turns the player after its interval  (yaw 0.0 -> 36.8)
+
+## Configs
+PASS  Profile JSON is written to disk  (3398 bytes)
+PASS  Loading the profile restores modules, settings and keybinds
+PASS  Switching profiles applies the other profile
+
+## Stability
+PASS  No module threw an error during the run  (0 errors)

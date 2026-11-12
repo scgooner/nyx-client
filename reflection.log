@@ -1,0 +1,6 @@
+ok   net.minecraft.client.Minecraft.rightClickDelay
+ok   net.minecraft.client.multiplayer.MultiPlayerGameMode.destroyDelay
+ok   net.minecraft.world.entity.projectile.FishingHook.biting
+ok   net.minecraft.world.entity.Entity.FLAG_GLOWING
+ok   net.minecraft.world.entity.Entity.setSharedFlag(int, boolean)
+ok   GuiSpriteScaling.NineSlice supports stretch_inner
