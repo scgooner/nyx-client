@@ -1,7 +1,10 @@
 name: Build
 on:
   push:
+    branches: [main]
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,20 +18,27 @@ jobs:
         with:
           gradle-version: current
       - name: Build
-        run: gradle build --no-daemon --stacktrace 2>&1 | tee build.log; exit ${PIPESTATUS[0]}
+        id: build
+        run: gradle build --no-daemon --stacktrace > build.log 2>&1; echo "code=$?" >> "$GITHUB_OUTPUT"
       - name: Dump 26.3 API
-        if: always()
+        if: hashFiles('tools/dump-api.sh') != ''
         run: bash tools/dump-api.sh || true
-      - uses: actions/upload-artifact@v4
+      - name: Publish results to the "out" branch
         if: always()
-        with:
-          name: api-dump
-          path: |
-            build/api-dump/
-            build.log
+        run: |
+          mkdir -p /tmp/out && cp build.log /tmp/out/ || true
+          cp -r build/api-dump /tmp/out/ 2>/dev/null || true
+          cp build/libs/*.jar /tmp/out/ 2>/dev/null; rm -f /tmp/out/*-sources.jar
+          echo "${{ steps.build.outputs.code }}" > /tmp/out/exit-code.txt
+          echo "${{ github.sha }}" > /tmp/out/commit.txt
+          cd /tmp/out && git init -q -b out && git add -A
+          git -c user.name=ci -c user.email=ci@localhost commit -qm "build ${{ github.sha }}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" out
       - uses: actions/upload-artifact@v4
         with:
           name: nyx-client-26.3-jar
           path: |
             build/libs/*.jar
             !build/libs/*-sources.jar
+      - name: Fail if build failed
+        run: test "${{ steps.build.outputs.code }}" = "0"
