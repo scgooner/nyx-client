@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "nyx",
+  "version": "${version}",
+  "name": "Nyx Client",
+  "description": "A modular utility client with a modern click GUI. Press Right Shift to open.",
+  "authors": ["scgooner"],
+  "environment": "client",
+  "entrypoints": { "client": ["dev.nyx.NyxClient"] },
+  "mixins": [],
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": "~26.3",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}
