@@ -1,5 +1,6 @@
 package dev.nyx.modules.combat;
 
+import dev.nyx.util.Mc;
 import dev.nyx.module.Category;
 import dev.nyx.module.Module;
 import dev.nyx.setting.NumberSetting;
@@ -27,7 +28,7 @@ public final class AutoTotem extends Module {
             return;
         }
         // Inventory clicks only line up with the player inventory menu, so skip while another container is open.
-        if (mc().screen != null && !(mc().screen instanceof InventoryScreen)) return;
+        if (Mc.screen() != null && !(Mc.screen() instanceof InventoryScreen)) return;
         LocalPlayer p = mc().player;
         if (p.getOffhandItem().getItem() == Items.TOTEM_OF_UNDYING) return;
         if (health.value() > 0 && p.getHealth() > health.value()) return;

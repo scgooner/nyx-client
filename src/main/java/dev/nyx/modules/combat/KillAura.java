@@ -1,5 +1,6 @@
 package dev.nyx.modules.combat;
 
+import dev.nyx.util.Mc;
 import dev.nyx.module.Category;
 import dev.nyx.module.Module;
 import dev.nyx.setting.BoolSetting;
@@ -29,7 +30,7 @@ public final class KillAura extends Module {
     @Override
     public void onTick() {
         LocalPlayer p = mc().player;
-        if (mc().screen != null || p.isSpectator()) return;
+        if (Mc.screen() != null || p.isSpectator()) return;
         if (pauseOnUse.on() && p.isUsingItem()) return;
         if (p.getAttackStrengthScale(0f) < charge.f()) return;
 
@@ -55,7 +56,7 @@ public final class KillAura extends Module {
 
         if (rotate.on()) Targets.face(p, target);
         mc().gameMode.attack(p, target);
-        p.swing(InteractionHand.MAIN_HAND);
+        Mc.swing(p, InteractionHand.MAIN_HAND);
     }
 
     @Override

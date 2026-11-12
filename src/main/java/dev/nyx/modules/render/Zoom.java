@@ -1,5 +1,6 @@
 package dev.nyx.modules.render;
 
+import dev.nyx.util.Mc;
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.nyx.module.Category;
 import dev.nyx.module.Module;
@@ -38,7 +39,7 @@ public final class Zoom extends Module {
     }
 
     private void update(float dt) {
-        boolean held = mc().screen == null && Keys.down(key.key());
+        boolean held = Mc.screen() == null && Keys.down(key.key());
         if (held && savedFov == null) {
             savedFov = mc().options.fov().get();
             current = savedFov;

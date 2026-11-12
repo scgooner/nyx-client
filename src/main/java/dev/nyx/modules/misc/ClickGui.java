@@ -1,5 +1,6 @@
 package dev.nyx.modules.misc;
 
+import dev.nyx.util.Mc;
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.nyx.gui.ClickGuiScreen;
 import dev.nyx.module.Category;
@@ -26,7 +27,7 @@ public final class ClickGui extends Module {
 
     @Override
     public void toggle() {
-        if (mc().screen == null) mc().setScreen(new ClickGuiScreen());
+        if (Mc.screen() == null) Mc.setScreen(new ClickGuiScreen());
     }
 
     @Override

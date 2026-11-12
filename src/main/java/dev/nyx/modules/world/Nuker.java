@@ -1,5 +1,6 @@
 package dev.nyx.modules.world;
 
+import dev.nyx.util.Mc;
 import dev.nyx.module.Category;
 import dev.nyx.module.Module;
 import dev.nyx.setting.BoolSetting;
@@ -36,7 +37,7 @@ public final class Nuker extends Module {
     public void onTick() {
         LocalPlayer p = mc().player;
         ClientLevel level = mc().level;
-        if (mc().screen != null) return;
+        if (Mc.screen() != null) return;
 
         if (mc().options.keyAttack.isDown() && mc().hitResult instanceof BlockHitResult hit && hit.getType() == HitResult.Type.BLOCK) {
             filter = level.getBlockState(hit.getBlockPos()).getBlock();
@@ -68,7 +69,7 @@ public final class Nuker extends Module {
         } else {
             mc().gameMode.continueDestroyBlock(targets.get(0), Direction.UP);
         }
-        p.swing(InteractionHand.MAIN_HAND);
+        Mc.swing(p, InteractionHand.MAIN_HAND);
     }
 
     @Override

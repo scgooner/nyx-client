@@ -1,5 +1,6 @@
 package dev.nyx.modules.player;
 
+import dev.nyx.util.Mc;
 import dev.nyx.module.Category;
 import dev.nyx.module.Module;
 import dev.nyx.setting.NumberSetting;
@@ -18,7 +19,7 @@ public final class AutoRespawn extends Module {
     @Override
     public void onTick() {
         LocalPlayer p = mc().player;
-        boolean dead = p.isDeadOrDying() || mc().screen instanceof DeathScreen;
+        boolean dead = p.isDeadOrDying() || Mc.screen() instanceof DeathScreen;
         if (!dead) {
             waited = 0;
             sent = false;

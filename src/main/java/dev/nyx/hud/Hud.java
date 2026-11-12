@@ -1,5 +1,6 @@
 package dev.nyx.hud;
 
+import dev.nyx.util.Mc;
 import dev.nyx.NyxClient;
 import dev.nyx.module.Module;
 import dev.nyx.module.ModuleManager;
@@ -32,7 +33,7 @@ public final class Hud {
         Minecraft mc = Minecraft.getInstance();
         Render2D.alpha = 1f;
         HudModule hud = ModuleManager.get(HudModule.class);
-        if (hud.isEnabled() && !mc.options.hideGui) {
+        if (hud.isEnabled() && !Mc.hudHidden()) {
             float y = 5;
             if (hud.watermark()) y = watermark(g, mc) + 4;
             if (hud.coords() && mc.player != null) info(g, mc, y);

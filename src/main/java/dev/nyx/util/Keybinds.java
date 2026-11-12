@@ -19,7 +19,7 @@ public final class Keybinds {
 
     public static void poll() {
         Minecraft mc = Minecraft.getInstance();
-        boolean allowed = mc.screen == null && mc.player != null;
+        boolean allowed = Mc.screen() == null && mc.player != null;
         for (Module m : ModuleManager.all()) {
             int key = m.getKey();
             boolean down = Keys.down(key);

@@ -43,3 +43,7 @@ net.fabricmc.fabric.api.client.gametest.v1.world.TestWorldBuilder
 net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotOptions
 net.fabricmc.fabric.api.client.gametest.v1.context.TestClientLevelContext
 net.fabricmc.fabric.api.client.gametest.v1.context.TestClientWorldContext
+net.minecraft.world.item.component.SwingAnimation
+net.minecraft.world.item.SwingAnimationType
+net.minecraft.client.gui.Hud
+net.minecraft.core.component.DataComponents

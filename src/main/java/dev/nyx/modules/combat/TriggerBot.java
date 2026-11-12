@@ -1,5 +1,6 @@
 package dev.nyx.modules.combat;
 
+import dev.nyx.util.Mc;
 import dev.nyx.module.Category;
 import dev.nyx.module.Module;
 import dev.nyx.setting.BoolSetting;
@@ -22,11 +23,11 @@ public final class TriggerBot extends Module {
     @Override
     public void onTick() {
         LocalPlayer p = mc().player;
-        if (mc().screen != null || p.isUsingItem()) return;
+        if (Mc.screen() != null || p.isUsingItem()) return;
         Entity target = mc().crosshairPickEntity;
         if (target == null || !Targets.matches(target, players.on(), hostiles.on(), passives.on())) return;
         if (p.getAttackStrengthScale(0f) < charge.f()) return;
         mc().gameMode.attack(p, target);
-        p.swing(InteractionHand.MAIN_HAND);
+        Mc.swing(p, InteractionHand.MAIN_HAND);
     }
 }

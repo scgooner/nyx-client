@@ -1,5 +1,6 @@
 package dev.nyx.modules.world;
 
+import dev.nyx.util.Mc;
 import dev.nyx.module.Category;
 import dev.nyx.module.Module;
 import dev.nyx.setting.NumberSetting;
@@ -41,9 +42,9 @@ public final class AutoFish extends Module {
                 cooldown--;
                 return;
             }
-            if (mc().screen != null) return;
+            if (Mc.screen() != null) return;
             mc().gameMode.useItem(p, hand);
-            p.swing(hand);
+            Mc.swing(p, hand);
             castTicks = 0;
             cooldown = 10;
             return;
@@ -55,7 +56,7 @@ public final class AutoFish extends Module {
         if (BITING == null) bite = castTicks > 20 && hook.isInWater() && hook.getDeltaMovement().y < -0.08;
         if (bite) {
             mc().gameMode.useItem(p, hand);
-            p.swing(hand);
+            Mc.swing(p, hand);
             cooldown = recast.i();
             caught++;
         }

@@ -1,5 +1,6 @@
 package dev.nyx.modules.player;
 
+import dev.nyx.util.Mc;
 import dev.nyx.module.Category;
 import dev.nyx.module.Module;
 import dev.nyx.setting.BoolSetting;
@@ -21,7 +22,7 @@ public final class AutoTool extends Module {
     public void onTick() {
         LocalPlayer p = mc().player;
         Inventory inv = p.getInventory();
-        boolean mining = mc().screen == null && mc().options.keyAttack.isDown()
+        boolean mining = Mc.screen() == null && mc().options.keyAttack.isDown()
                 && mc().hitResult instanceof BlockHitResult hit && hit.getType() == HitResult.Type.BLOCK;
 
         if (mining) {

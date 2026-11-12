@@ -1,5 +1,6 @@
 package dev.nyx.modules.misc;
 
+import dev.nyx.util.Mc;
 import dev.nyx.module.Category;
 import dev.nyx.module.Module;
 import dev.nyx.setting.BoolSetting;
@@ -30,6 +31,6 @@ public final class AntiAFK extends Module {
         LocalPlayer p = mc().player;
         if (jump.on() && p.onGround()) p.jumpFromGround();
         if (rotate.on()) p.setYRot(p.getYRot() + ThreadLocalRandom.current().nextFloat(-45f, 45f));
-        if (swing.on()) p.swing(InteractionHand.MAIN_HAND);
+        if (swing.on()) Mc.swing(p, InteractionHand.MAIN_HAND);
     }
 }

@@ -1,5 +1,6 @@
 package dev.nyx.gui;
 
+import dev.nyx.util.Mc;
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.nyx.NyxClient;
 import dev.nyx.config.ConfigManager;
@@ -139,8 +140,8 @@ public final class ClickGuiScreen extends Screen {
         lastConfigs = configsPage;
         Minecraft mc = Minecraft.getInstance();
         mc.execute(() -> {
-            if (mc.screen == this) {
-                mc.setScreen(null);
+            if (Mc.screen() == this) {
+                Mc.setScreen(null);
                 Keybinds.swallowHeldKeys();
             }
         });
